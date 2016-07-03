@@ -78,18 +78,28 @@
             [xml]$SoundTouchVolume     = Invoke-WebRequest -Method Get -UseBasicParsing "$URL/volume"
             [xml]$SoundTouchPresets    = Invoke-WebRequest -Method Get -UseBasicParsing "$URL/presets"
             [xml]$SoundTouchNowPlaying = Invoke-WebRequest -Method Get -UseBasicParsing "$URL/now_playing"
-            
+        }
+
+        #Functions
+        IF("Functions"){
             #Create Result Data Array
             $ResultDataArray = New-Object System.Collections.Generic.List[object]
 
             #Write Output to Object $ResultDataArray
-            function ResultOutput([string]$function,[string]$value,[string]$result){
+            Function ResultOutput([string]$Function,[string]$value,[string]$result){
                 $ResultOutput =  New-Object Psobject -Property @{
-                    function = $function
+                    Function = $Function
                     value    = $value
                     status   = $result
                 }
                     $ResultDataArray.add($ResultOutput)
+            }
+            
+            #Send PowerKey to SoundTouch
+            Function SendPowerKey(){
+                $Result = Invoke-WebRequest -UseBasicParsing "$URL/key" -Method Post -ContentType 'text/xml' -Body "<key state=""press"" sender=""Gabbo"">POWER</key>"
+                $Result = Invoke-WebRequest -UseBasicParsing "$URL/key" -Method Post -ContentType 'text/xml' -Body "<key state=""release"" sender=""Gabbo"">POWER</key>"
+                ResultOutput "Power" $Power $Result.StatusDescription;
             }
         }
 
@@ -140,18 +150,14 @@
         IF($Power){
             IF($Power -eq "on"){
                 IF($SoundTouchNowPlaying.nowPlaying.source -eq "STANDBY"){
-                    $Result = Invoke-WebRequest -UseBasicParsing "$URL/key" -Method Post -ContentType 'text/xml' -Body "<key state=""press"" sender=""Gabbo"">POWER</key>"
-                    $Result = Invoke-WebRequest -UseBasicParsing "$URL/key" -Method Post -ContentType 'text/xml' -Body "<key state=""release"" sender=""Gabbo"">POWER</key>"
-                    ResultOutput "Power" $Power $Result.StatusDescription;
+                    SendPowerKey
                 } else {
                     ResultOutput "Power" $Power "Do nothing System Power was $Power";
                 }
             }
             IF($Power -eq "off"){
                 IF($SoundTouchNowPlaying.nowPlaying.source -ne "STANDBY"){
-                    $Result = Invoke-WebRequest -UseBasicParsing "$URL/key" -Method Post -ContentType 'text/xml' -Body "<key state=""press"" sender=""Gabbo"">POWER</key>"
-                    $Result = Invoke-WebRequest -UseBasicParsing "$URL/key" -Method Post -ContentType 'text/xml' -Body "<key state=""release"" sender=""Gabbo"">POWER</key>"
-                    ResultOutput "Power" $Power $Result.StatusDescription;
+                    SendPowerKey
                 } else {
                     ResultOutput "Power" $Power "Do nothing System Power was $Power";
                 }
@@ -159,7 +165,7 @@
         }
 
         #Result Output
-        $ResultDataArray | Select function,value,status | FT
+        $ResultDataArray | Select Function,value,status | FT
     }
 
 }
