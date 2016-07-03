@@ -86,9 +86,9 @@
             $ResultDataArray = New-Object System.Collections.Generic.List[object]
 
             #Write Output to Object $ResultDataArray
-            Function ResultOutput([string]$Function,[string]$value,[string]$Result){
+            Function ResultOutput([string]$function,[string]$value,[string]$Result){
                 $ResultOutput =  New-Object Psobject -Property @{
-                    Function = $Function
+                    function = $function
                     value    = $value
                     status   = $Result
                 }
@@ -172,7 +172,7 @@
 
 
         #Result Output
-        $ResultDataArray | Select Function,value,status | FT
+        $ResultDataArray | Select function,value,status | FT
     }
 
 }
