@@ -86,30 +86,37 @@
             $ResultDataArray = New-Object System.Collections.Generic.List[object]
 
             #Write Output to Object $ResultDataArray
-            Function ResultOutput([string]$Function,[string]$value,[string]$result){
+            Function ResultOutput([string]$Function,[string]$value,[string]$Result){
                 $ResultOutput =  New-Object Psobject -Property @{
                     Function = $Function
                     value    = $value
-                    status   = $result
+                    status   = $Result
                 }
-                    $ResultDataArray.add($ResultOutput)
+                $ResultDataArray.add($ResultOutput)
             }
             
-            #Send PowerKey to SoundTouch
-            Function SendPowerKey(){
-                $Result = Invoke-WebRequest -UseBasicParsing "$URL/key" -Method Post -ContentType 'text/xml' -Body "<key state=""press"" sender=""Gabbo"">POWER</key>"
-                $Result = Invoke-WebRequest -UseBasicParsing "$URL/key" -Method Post -ContentType 'text/xml' -Body "<key state=""release"" sender=""Gabbo"">POWER</key>"
-                ResultOutput "Power" $Power $Result.StatusDescription;
+            #Send Key to SoundTouch
+            Function PostKey($Key){
+                $Key = $Key.ToUpper()
+                $PostKey = Invoke-WebRequest -UseBasicParsing "$URL/key" -Method Post -ContentType 'text/xml' -Body "<key state=""press"" sender=""Gabbo"">$Key</key>"
+                $PostKey = Invoke-WebRequest -UseBasicParsing "$URL/key" -Method Post -ContentType 'text/xml' -Body "<key state=""release"" sender=""Gabbo"">$Key</key>"
+                return $PostKey.StatusDescription
+            }
+
+            #Post Volume Level
+            Function PostVolume($Volume){
+                $PostVolume = Invoke-WebRequest -UseBasicParsing "$URL/volume" -Method Post -ContentType 'text/xml' -Body "<volume>$Volume</volume>"
+                return $PostVolume.StatusDescription
             }
         }
 
         #Set Volume
         IF($SetVolume){
             IF($SoundTouchVolume.volume.actualvolume -ne $SetVolume){
-                $Result = Invoke-WebRequest -UseBasicParsing "$URL/volume" -Method Post -ContentType 'text/xml' -Body "<volume>$SetVolume</volume>"
-                ResultOutput "SetVolume" $SetVolume $Result.StatusDescription;
+                $PostVolume = PostVolume $SetVolume
+                ResultOutput "SetVolume" $SetVolume $PostVolume
             } else {
-                ResultOutput "SetVolume" $SetVolume "Do nothing value was $SetVolume";
+                ResultOutput "SetVolume" $SetVolume "Do nothing value was $SetVolume"
             }
         }
 
@@ -117,52 +124,52 @@
         IF($SetPreset){
             IF($Power -ne "off"){
                 IF($SoundTouchPresets.presets.preset.ContentItem[$SetPreset - 1].location -ne $SoundTouchNowPlaying.nowPlaying.ContentItem.location){
-                    $Result = Invoke-WebRequest -UseBasicParsing "$URL/key" -Method Post -ContentType 'text/xml' -Body "<key state=""press"" sender=""Gabbo"">PRESET_$SetPreset</key>"
-                    $Result = Invoke-WebRequest -UseBasicParsing "$URL/key" -Method Post -ContentType 'text/xml' -Body "<key state=""release"" sender=""Gabbo"">PRESET_$SetPreset</key>"
-                    ResultOutput "SetPreset" $SetPreset $Result.StatusDescription;
+                    $PostKey = PostKey "PRESET_$SetPreset";
+                    ResultOutput "SetPreset" $SetPreset $PostKey
                 } else {
-                    ResultOutput "SetPreset" $SetPreset "Do nothing value was $SetPreset";
+                    ResultOutput "SetPreset" $SetPreset "Do nothing value was $SetPreset"
                 }
                 IF($Power -eq "on"){
+                    ResultOutput "Power" $Power "Power $Power over SetPreset"
                     Remove-Variable Power
-                    ResultOutput "Power" $Power "Power on over SetPreset";
                 }
             } else {
-                ResultOutput "SetPreset" $Power "Do nothing Power value is $Power";
+                ResultOutput "SetPreset" $Power "Do nothing Power value is $Power"
             }
         }
 
         #Send a key
         IF($SendKey){
-            $SendKey = $SendKey.ToUpper()
-            $Result = Invoke-WebRequest -UseBasicParsing "$URL/key" -Method Post -ContentType 'text/xml' -Body "<key state=""press"" sender=""Gabbo"">$SendKey</key>"
-            $Result = Invoke-WebRequest -UseBasicParsing "$URL/key" -Method Post -ContentType 'text/xml' -Body "<key state=""release"" sender=""Gabbo"">$SendKey</key>"
-            ResultOutput "SendKey" $SendKey $Result.StatusDescription;
-        }
-
-        #Send a API-Key
-        IF($PostApiKey -and $ApiXml){
-            $Result = Invoke-WebRequest -UseBasicParsing "$URL/$PostApiKey" -Method Post -ContentType 'text/xml' -Body "$ApiXml"
-            ResultOutput "PostCustomApiKey" $PostApiKey $Result.StatusDescription;
+            $PostKey = PostKey $SendKey;
+            ResultOutput "SendKey" $SendKey $PostKey
         }
 
         #Set Power on/off
         IF($Power){
             IF($Power -eq "on"){
                 IF($SoundTouchNowPlaying.nowPlaying.source -eq "STANDBY"){
-                    SendPowerKey
+                    $PostKey = PostKey "POWER"
+                    ResultOutput "Power" $Power $PostKey
                 } else {
-                    ResultOutput "Power" $Power "Do nothing System Power was $Power";
+                    ResultOutput "Power" $Power "Do nothing System Power was $Power"
                 }
             }
             IF($Power -eq "off"){
                 IF($SoundTouchNowPlaying.nowPlaying.source -ne "STANDBY"){
-                    SendPowerKey
+                    $PostKey = PostKey "POWER"
+                    ResultOutput "Power" $Power $PostKey
                 } else {
-                    ResultOutput "Power" $Power "Do nothing System Power was $Power";
+                    ResultOutput "Power" $Power "Do nothing System Power was $Power"
                 }
             }
         }
+
+        #Send a API-Key
+        IF($PostApiKey -and $ApiXml){
+            $Result = Invoke-WebRequest -UseBasicParsing "$URL/$PostApiKey" -Method Post -ContentType 'text/xml' -Body "$ApiXml"
+            ResultOutput "PostCustomApiKey" $PostApiKey $Result.StatusDescription
+        }
+
 
         #Result Output
         $ResultDataArray | Select Function,value,status | FT
