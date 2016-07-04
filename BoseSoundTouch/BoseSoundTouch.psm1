@@ -30,7 +30,7 @@
 	
     VERSION HISTORY
     1.0.0   2016-06-30   Initial version
-    1.0.1   2016*07-01   add Power On/Off Parameter
+    1.0.1   2016-07-01   add Power On/Off Parameter
     1.0.2   2016-07-02   add Get-Help Section
     1.0.3   2016-07-03   add Output Object  
 
