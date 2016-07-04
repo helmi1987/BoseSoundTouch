@@ -6,9 +6,7 @@ A Simple Powershell_Module for Controlling the BOSE SoundTouch over the BOSE API
 After loading the module you can control the BOSE SoundTouch Speaker over Powershell
 
 ## SYNTAX
- BoseSoundTouch -SoundTouchIP <DNS_or_IP> -SetVolume <1-100> 
-                -SetPreset <1-6> -Power <on/off> -SendKey <BUTTON>
-                -PostApiKey <string> -ApiXml <string>
+ BoseSoundTouch -SoundTouchIP DNS_or_IP -SetVolume 1-100 -SetPreset 1-6 -Power on/off -SendKey BUTTON -PostApiKey string -ApiXml string
 
 Button for -SendKey
 KEY_VALUE { PLAY, PAUSE, STOP, PREV_TRACK, NEXT_TRACK, THUMBS_UP, THUMBS_DOWN, BOOKMARK, POWER,
