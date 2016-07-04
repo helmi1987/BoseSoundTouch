@@ -15,5 +15,4 @@ KEY_VALUE { PLAY, PAUSE, STOP, PREV_TRACK, NEXT_TRACK, THUMBS_UP, THUMBS_DOWN, B
 	    ADD_FAVORITE, REMOVE_FAVORITE, INVALID_KEY }
 
 Example for -PostApiKey -ApiXml
--PostApiKey bass -ApiXml "<bass>$INT</bass>"
-	   
+BoseSoundTouch -SoundTouchIP DNS_or_IP -PostApiKey bass -ApiXml "<bass>$INT</bass>"
