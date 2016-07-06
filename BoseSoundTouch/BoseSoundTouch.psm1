@@ -51,7 +51,8 @@
     1.0.0   2016-06-30   Initial version
     1.0.1   2016-07-01   add Power On/Off Parameter
     1.0.2   2016-07-02   add Get-Help Section
-    1.0.3   2016-07-03   add Output Object  
+    1.0.3   2016-07-03   add Output Object
+    1.0.4   2016-07-06   add Volume fade in Function
 
     .LINK
     Github repo: https://github.com/helmi1987/SoundTouch
@@ -67,6 +68,11 @@
         [parameter(Mandatory=$false)]
         [ValidateRange(1,100)]
         [int32]$SetVolume,
+
+
+        [parameter(Mandatory=$false)]
+        [ValidateRange(1,20)]
+        [int32]$VolumeFadeTime,
 
         
         [parameter(Mandatory=$false)]
@@ -127,12 +133,31 @@
             $PostVolume = Invoke-WebRequest -UseBasicParsing "$URL/volume" -Method Post -ContentType 'text/xml' -Body "<volume>$Volume</volume>"
             return $PostVolume.StatusDescription
         }
+
+        #VolumeFadeIn
+        Function FadeInVolume($FadeTime,$SetVolume){
+            $FadeStart    = 1                                   #Start Volume
+
+            $VolStepTotal = $SetVolume - $FadeStart             #Total Steps
+            $FadeTimestep = ($FadeTime * 60000) / $VolStepTotal #Time in Millisecond from 1 to 2
+
+            $PostVolume   = PostVolume $FadeStart               #Start Volume
+
+            Do{
+                Start-Sleep -m $FadeTimeStep
+                $FadeStart  = $FadeStart + 1
+                $PostVolume = PostVolume $FadeStart
+            }
+            while([int]$FadeStart -ne [int]$SetVolume)
+            return $PostVolume
+        }
         #endregion
     }
     
     Process{
+        
         #region SetVolume
-        IF($SetVolume){
+        IF(-not $VolumeFadeTime -and $SetVolume){
             IF($SoundTouchVolume.volume.actualvolume -ne $SetVolume){
                 $PostVolume = PostVolume $SetVolume
                 ResultOutput "SetVolume" $SetVolume $PostVolume
@@ -158,6 +183,13 @@
             } else {
                 ResultOutput "SetPreset" $Power "Do nothing Power value is $Power"
             }
+        }
+        #endregion
+
+        #region VolumeFadeTime
+        IF($VolumeFadeTime -and $SetVolume){
+            $VolumeFadeIn = FadeInVolume $VolumeFadeTime $SetVolume
+            ResultOutput "SetVolume" $SetVolume "$VolumeFadeIn over VolumeFadeTime, FadeTime was $VolumeFadeTime minute(s)"
         }
         #endregion
 
