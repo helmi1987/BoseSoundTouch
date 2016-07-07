@@ -71,7 +71,7 @@
 
 
         [parameter(Mandatory=$false)]
-        [ValidateRange(1,20)]
+        [ValidateRange(1,1200)]
         [int32]$VolumeFadeTime,
 
         
@@ -139,7 +139,7 @@
             $FadeStart    = 1                                   #Start Volume
 
             $VolStepTotal = $SetVolume - $FadeStart             #Total Steps
-            $FadeTimestep = ($FadeTime * 60000) / $VolStepTotal #Time in Millisecond from 1 to 2
+            $FadeTimestep = ($FadeTime * 1000) / $VolStepTotal  #Time in Millisecond from 1 to 2
 
             $PostVolume   = PostVolume $FadeStart               #Start Volume
 
@@ -189,7 +189,7 @@
         #region VolumeFadeTime
         IF($VolumeFadeTime -and $SetVolume){
             $VolumeFadeIn = FadeInVolume $VolumeFadeTime $SetVolume
-            ResultOutput "SetVolume" $SetVolume "$VolumeFadeIn over VolumeFadeTime, FadeTime was $VolumeFadeTime minute(s)"
+            ResultOutput "SetVolume" $SetVolume "$VolumeFadeIn over VolumeFadeTime, FadeTime was $VolumeFadeTime second(s)"
         }
         #endregion
 
